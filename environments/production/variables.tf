@@ -2,31 +2,77 @@ variable "jamfpro_auth_method" {
   type        = string
   description = "The Jamf Pro authentication method. Options are 'basic' for username/password or 'oauth2' for client id/secret."
   default     = "basic"
+
+  validation {
+    condition     = contains(["basic", "oauth2"], var.jamfpro_auth_method)
+    error_message = "jamfpro_auth_method must be 'basic' or 'oauth2'."
+  }
 }
 
 variable "jamfpro_instance_fqdn" {
   type        = string
   description = "The Jamf Pro instance FQDN (e.g., https://yourcompany.jamfcloud.com)"
   sensitive   = true
+  default     = null
+
+  validation {
+    condition     = var.jamfpro_instance_fqdn != null && length(trimspace(var.jamfpro_instance_fqdn)) > 0
+    error_message = "jamfpro_instance_fqdn is required. Set it in environments/production/terraform.tfvars (do not commit) or via TF_VAR_jamfpro_instance_fqdn."
+  }
 }
 
 variable "jamfpro_username" {
   type        = string
   description = "The Jamf Pro username for basic authentication"
   sensitive   = true
-  default     = ""
+  default     = null
+
+  validation {
+    condition     = var.jamfpro_auth_method != "basic" || (var.jamfpro_username != null && length(trimspace(var.jamfpro_username)) > 0)
+    error_message = "jamfpro_username is required when jamfpro_auth_method is 'basic'."
+  }
 }
 
 variable "jamfpro_password" {
   type        = string
   description = "The Jamf Pro password for basic authentication"
   sensitive   = true
-  default     = ""
+  default     = null
+
+  validation {
+    condition     = var.jamfpro_auth_method != "basic" || (var.jamfpro_password != null && length(trimspace(var.jamfpro_password)) > 0)
+    error_message = "jamfpro_password is required when jamfpro_auth_method is 'basic'."
+  }
+}
+
+variable "jamfpro_client_id" {
+  type        = string
+  description = "The Jamf Pro OAuth2 client id (required when auth_method is oauth2)."
+  sensitive   = true
+  default     = null
+
+  validation {
+    condition     = var.jamfpro_auth_method != "oauth2" || (var.jamfpro_client_id != null && length(trimspace(var.jamfpro_client_id)) > 0)
+    error_message = "jamfpro_client_id is required when jamfpro_auth_method is 'oauth2'."
+  }
+}
+
+variable "jamfpro_client_secret" {
+  type        = string
+  description = "The Jamf Pro OAuth2 client secret (required when auth_method is oauth2)."
+  sensitive   = true
+  default     = null
+
+  validation {
+    condition     = var.jamfpro_auth_method != "oauth2" || (var.jamfpro_client_secret != null && length(trimspace(var.jamfpro_client_secret)) > 0)
+    error_message = "jamfpro_client_secret is required when jamfpro_auth_method is 'oauth2'."
+  }
 }
 
 variable "profile_name" {
   type        = string
   description = "Jamf UI name for the configuration profile."
+  default     = "Company Base Profile"
 }
 
 variable "profile_description" {
@@ -38,6 +84,7 @@ variable "profile_description" {
 variable "mobileconfig_path" {
   type        = string
   description = "Path to a Jamf-exported .mobileconfig file (checked into repo)."
+  default     = "profiles/company.mobileconfig"
 }
 
 variable "redeploy_on_update" {
@@ -92,4 +139,8 @@ variable "scope" {
       ibeacon_ids                          = optional(set(number), [])
     }))
   })
+
+  default = {
+    all_computers = false
+  }
 }
