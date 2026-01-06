@@ -1,0 +1,19 @@
+jamfpro_auth_method = "basic"
+jamfpro_instance_fqdn = "https://yourcompany.jamfcloud.com"
+
+jamfpro_username = "your_username"
+jamfpro_password = "your_password"
+
+profile_name        = "Company - PPPC + System Extensions"
+profile_description = "Managed by Terraform"
+
+mobileconfig_path = "profiles/company.mobileconfig"
+
+redeploy_on_update  = "Newly Assigned"
+distribution_method = "Install Automatically"
+
+allow_all_computers = false
+scope = {
+  all_computers      = false
+  computer_group_ids = [123]
+}
