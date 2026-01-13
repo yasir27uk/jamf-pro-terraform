@@ -1,12 +1,8 @@
-jamfpro_auth_method = "basic"
+jamfpro_auth_method = "oauth2"
 jamfpro_instance_fqdn = "https://yourcompany.jamfcloud.com"
 
-jamfpro_username = "your_username"
-jamfpro_password = "your_password"
-
-# OAuth2 (if jamfpro_auth_method = "oauth2")
-# jamfpro_client_id     = "your_client_id"
-# jamfpro_client_secret = "your_client_secret"
+jamfpro_client_id     = "your_client_id"
+jamfpro_client_secret = "your_client_secret"
 
 profile_name        = "Company - PPPC + System Extensions"
 profile_description = "Managed by Terraform"

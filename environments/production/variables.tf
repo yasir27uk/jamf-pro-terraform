@@ -1,7 +1,7 @@
 variable "jamfpro_auth_method" {
   type        = string
   description = "The Jamf Pro authentication method. Options are 'basic' for username/password or 'oauth2' for client id/secret."
-  default     = "basic"
+  default     = "oauth2"
 
   validation {
     condition     = contains(["basic", "oauth2"], var.jamfpro_auth_method)
@@ -18,30 +18,6 @@ variable "jamfpro_instance_fqdn" {
   validation {
     condition     = var.jamfpro_instance_fqdn != null && length(trimspace(var.jamfpro_instance_fqdn)) > 0
     error_message = "jamfpro_instance_fqdn is required. Set it in environments/production/terraform.tfvars (do not commit) or via TF_VAR_jamfpro_instance_fqdn."
-  }
-}
-
-variable "jamfpro_username" {
-  type        = string
-  description = "The Jamf Pro username for basic authentication"
-  sensitive   = true
-  default     = null
-
-  validation {
-    condition     = var.jamfpro_auth_method != "basic" || (var.jamfpro_username != null && length(trimspace(var.jamfpro_username)) > 0)
-    error_message = "jamfpro_username is required when jamfpro_auth_method is 'basic'."
-  }
-}
-
-variable "jamfpro_password" {
-  type        = string
-  description = "The Jamf Pro password for basic authentication"
-  sensitive   = true
-  default     = null
-
-  validation {
-    condition     = var.jamfpro_auth_method != "basic" || (var.jamfpro_password != null && length(trimspace(var.jamfpro_password)) > 0)
-    error_message = "jamfpro_password is required when jamfpro_auth_method is 'basic'."
   }
 }
 

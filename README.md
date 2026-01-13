@@ -89,6 +89,13 @@ Jamf Pro Configuration Profile **Options** are defined inside the `.mobileconfig
 - **Example usage**
   - `environments/production`
 
+### Computers Configuration Profiles (Multi-Profile)
+
+If you want to manage many configuration profiles from one environment, use the multi-profile module (creates profiles via `for_each`).
+
+- **Module path**
+  - `modules/computers-configuration-profiles`
+
 Guardrails included:
 
 - `scope.all_computers=true` requires `allow_all_computers=true` (to reduce accidental broad deployments)
@@ -101,6 +108,10 @@ Guardrails included:
 3. Use Terraform workspaces for managing multiple environments
 4. Implement proper peer review processes for configuration changes
 5. Use Terraform modules for reusable configurations
+
+## Running Terraform
+
+Run `terraform init/plan/apply` from the environment folder (for example `environments/production`) so Terraform picks up the correct variables and configuration.
 
 ## Support
 

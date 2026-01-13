@@ -7,35 +7,41 @@ terraform {
 }
 
 locals {
-  payloads_resolved = var.payloads_file != null ? file(var.payloads_file) : var.payloads
+  profiles_payloads_resolved = {
+    for k, p in var.profiles : k => (
+      p.payloads_file != null ? file(p.payloads_file) : p.payloads
+    )
+  }
 }
 
 resource "jamfpro_macos_configuration_profile_plist" "this" {
-  name               = var.name
-  payloads           = local.payloads_resolved
-  redeploy_on_update = var.redeploy_on_update
+  for_each = var.profiles
 
-  description         = var.description
-  level               = var.level
-  distribution_method = var.distribution_method
-  payload_validate    = var.payload_validate
-  user_removable      = var.user_removable
-  site_id             = var.site_id
-  category_id         = var.category_id
+  name               = each.value.name
+  payloads           = local.profiles_payloads_resolved[each.key]
+  redeploy_on_update = each.value.redeploy_on_update
+
+  description         = each.value.description
+  level               = each.value.level
+  distribution_method = each.value.distribution_method
+  payload_validate    = each.value.payload_validate
+  user_removable      = each.value.user_removable
+  site_id             = each.value.site_id
+  category_id         = each.value.category_id
 
   scope {
-    all_computers = var.scope.all_computers
-    all_jss_users = var.scope.all_jss_users
+    all_computers = each.value.scope.all_computers
+    all_jss_users = each.value.scope.all_jss_users
 
-    building_ids       = var.scope.building_ids
-    computer_group_ids = var.scope.computer_group_ids
-    computer_ids       = var.scope.computer_ids
-    department_ids     = var.scope.department_ids
-    jss_user_group_ids = var.scope.jss_user_group_ids
-    jss_user_ids       = var.scope.jss_user_ids
+    building_ids       = each.value.scope.building_ids
+    computer_group_ids = each.value.scope.computer_group_ids
+    computer_ids       = each.value.scope.computer_ids
+    department_ids     = each.value.scope.department_ids
+    jss_user_group_ids = each.value.scope.jss_user_group_ids
+    jss_user_ids       = each.value.scope.jss_user_ids
 
     dynamic "limitations" {
-      for_each = var.scope.limitations == null ? [] : [var.scope.limitations]
+      for_each = each.value.scope.limitations == null ? [] : [each.value.scope.limitations]
       content {
         network_segment_ids                  = limitations.value.network_segment_ids
         ibeacon_ids                          = limitations.value.ibeacon_ids
@@ -45,7 +51,7 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
     }
 
     dynamic "exclusions" {
-      for_each = var.scope.exclusions == null ? [] : [var.scope.exclusions]
+      for_each = each.value.scope.exclusions == null ? [] : [each.value.scope.exclusions]
       content {
         computer_ids                         = exclusions.value.computer_ids
         computer_group_ids                   = exclusions.value.computer_group_ids
@@ -62,7 +68,7 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
   }
 
   dynamic "self_service" {
-    for_each = var.self_service == null ? [] : [var.self_service]
+    for_each = each.value.self_service == null ? [] : [each.value.self_service]
     content {
       install_button_text             = self_service.value.install_button_text
       self_service_description        = self_service.value.self_service_description
@@ -85,11 +91,11 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
 
   dynamic "timeouts" {
     for_each = (
-      var.timeouts.create != null ||
-      var.timeouts.read != null ||
-      var.timeouts.update != null ||
-      var.timeouts.delete != null
-    ) ? [var.timeouts] : []
+      each.value.timeouts.create != null ||
+      each.value.timeouts.read != null ||
+      each.value.timeouts.update != null ||
+      each.value.timeouts.delete != null
+    ) ? [each.value.timeouts] : []
     content {
       create = timeouts.value.create
       read   = timeouts.value.read
@@ -100,26 +106,21 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(trimspace(local.payloads_resolved)) > 0
-      error_message = "Configuration profile payload is empty. Provide a Jamf-exported .mobileconfig via payloads or payloads_file (this is where Options payloads like PPPC/System Extensions/Certificates/etc are defined)."
+      condition     = length(trimspace(local.profiles_payloads_resolved[each.key])) > 0
+      error_message = "Configuration profile payload is empty for key '${each.key}'. Provide payloads or payloads_file."
     }
 
     precondition {
-      condition     = var.scope.all_computers == false || var.allow_all_computers == true
-      error_message = "scope.all_computers=true requires allow_all_computers=true to reduce accidental broad deployments."
+      condition     = each.value.scope.all_computers == false || each.value.allow_all_computers == true
+      error_message = "scope.all_computers=true for key '${each.key}' requires allow_all_computers=true to reduce accidental broad deployments."
     }
 
     precondition {
       condition = (
-        (var.distribution_method == "Make Available in Self Service" && var.self_service != null) ||
-        (var.distribution_method != "Make Available in Self Service" && var.self_service == null)
+        (each.value.distribution_method == "Make Available in Self Service" && each.value.self_service != null) ||
+        (each.value.distribution_method != "Make Available in Self Service" && each.value.self_service == null)
       )
-      error_message = "self_service must be provided only when distribution_method is 'Make Available in Self Service'."
-    }
-
-    precondition {
-      condition     = var.level != null
-      error_message = "level must be set (use 'System' for computer-level profiles)."
+      error_message = "self_service must be provided only when distribution_method is 'Make Available in Self Service' (profile key '${each.key}')."
     }
   }
 }

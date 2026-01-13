@@ -12,11 +12,8 @@ provider "jamfpro" {
   auth_method = var.jamfpro_auth_method
 
   jamfpro_instance_fqdn = var.jamfpro_instance_fqdn
-  basic_auth_username   = var.jamfpro_username
-  basic_auth_password   = var.jamfpro_password
-
-  client_id     = var.jamfpro_client_id
-  client_secret = var.jamfpro_client_secret
+  client_id             = var.jamfpro_client_id
+  client_secret         = var.jamfpro_client_secret
 
   jamfpro_load_balancer_lock = true
 }
