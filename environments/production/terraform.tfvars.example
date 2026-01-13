@@ -17,3 +17,24 @@ scope = {
   all_computers      = false
   computer_group_ids = [123]
 }
+
+# Optional: Manage multiple profiles dynamically
+# If set, this overrides the single profile_* variables above.
+# profiles = {
+#   baseline = {
+#     name          = "Company Base Profile"
+#     payloads_file = "profiles/company.mobileconfig"
+#     scope = {
+#       all_computers      = false
+#       computer_group_ids = [123]
+#     }
+#   }
+#   chrome = {
+#     name          = "Google Chrome - Managed"
+#     payloads_file = "profiles/chrome.mobileconfig"
+#     scope = {
+#       all_computers      = false
+#       computer_group_ids = [123]
+#     }
+#   }
+# }

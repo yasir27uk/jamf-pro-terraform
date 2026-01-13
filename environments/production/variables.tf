@@ -57,6 +57,83 @@ variable "profile_description" {
   default     = null
 }
 
+variable "profiles" {
+  description = "Optional map of configuration profiles to create. If provided, overrides the single profile_* variables and creates one profile per map entry."
+  type = map(object({
+    name = string
+
+    description = optional(string)
+
+    payloads_file = string
+
+    redeploy_on_update  = optional(string, "Newly Assigned")
+    distribution_method = optional(string, "Install Automatically")
+    level               = optional(string, "System")
+
+    payload_validate = optional(bool, true)
+    user_removable   = optional(bool, false)
+
+    site_id     = optional(number)
+    category_id = optional(number)
+
+    allow_all_computers = optional(bool, false)
+    scope = object({
+      all_computers = bool
+
+      all_jss_users = optional(bool, false)
+
+      building_ids       = optional(set(number), [])
+      computer_group_ids = optional(set(number), [])
+      computer_ids       = optional(set(number), [])
+      department_ids     = optional(set(number), [])
+      jss_user_group_ids = optional(set(number), [])
+      jss_user_ids       = optional(set(number), [])
+
+      limitations = optional(object({
+        network_segment_ids                  = optional(set(number), [])
+        ibeacon_ids                          = optional(set(number), [])
+        directory_service_or_local_usernames = optional(set(string), [])
+        directory_service_usergroup_ids      = optional(set(number), [])
+      }))
+
+      exclusions = optional(object({
+        computer_ids                         = optional(set(number), [])
+        computer_group_ids                   = optional(set(number), [])
+        building_ids                         = optional(set(number), [])
+        department_ids                       = optional(set(number), [])
+        network_segment_ids                  = optional(set(number), [])
+        jss_user_ids                         = optional(set(number), [])
+        jss_user_group_ids                   = optional(set(number), [])
+        directory_service_or_local_usernames = optional(set(string), [])
+        directory_service_usergroup_ids      = optional(set(number), [])
+        ibeacon_ids                          = optional(set(number), [])
+      }))
+    })
+  }))
+  default = null
+
+  validation {
+    condition = var.profiles == null || alltrue([
+      for _, p in var.profiles : contains(["All", "Newly Assigned"], p.redeploy_on_update)
+    ])
+    error_message = "For each profile, redeploy_on_update must be one of: 'All', 'Newly Assigned'."
+  }
+
+  validation {
+    condition = var.profiles == null || alltrue([
+      for _, p in var.profiles : contains(["Make Available in Self Service", "Install Automatically"], p.distribution_method)
+    ])
+    error_message = "For each profile, distribution_method must be one of: 'Make Available in Self Service', 'Install Automatically'."
+  }
+
+  validation {
+    condition = var.profiles == null || alltrue([
+      for _, p in var.profiles : contains(["User", "System"], p.level)
+    ])
+    error_message = "For each profile, level must be one of: 'User', 'System'."
+  }
+}
+
 variable "mobileconfig_path" {
   type        = string
   description = "Path to a Jamf-exported .mobileconfig file (checked into repo)."

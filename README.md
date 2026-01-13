@@ -89,12 +89,9 @@ Jamf Pro Configuration Profile **Options** are defined inside the `.mobileconfig
 - **Example usage**
   - `environments/production`
 
-### Computers Configuration Profiles (Multi-Profile)
+### Multiple Profiles (Dynamic)
 
-If you want to manage many configuration profiles from one environment, use the multi-profile module (creates profiles via `for_each`).
-
-- **Module path**
-  - `modules/computers-configuration-profiles`
+`environments/production` supports creating multiple profiles dynamically by setting a `profiles` map (each entry is created via `for_each` using the enterprise module).
 
 Guardrails included:
 
