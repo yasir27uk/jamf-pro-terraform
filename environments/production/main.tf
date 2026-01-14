@@ -19,7 +19,15 @@ provider "jamfpro" {
 }
 
 locals {
-  profiles = var.profiles != null ? var.profiles : {
+  profiles = var.profiles != null ? {
+    for k, v in var.profiles : k => merge(
+      {
+        payload_header  = var.payload_header
+        payload_content = var.payload_content
+      },
+      v
+    )
+    } : {
     default = {
       name                = var.profile_name
       description         = var.profile_description
