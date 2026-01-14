@@ -23,14 +23,37 @@ locals {
     default = {
       name                = var.profile_name
       description         = var.profile_description
-      payloads_file       = var.mobileconfig_path
       redeploy_on_update  = var.redeploy_on_update
       distribution_method = var.distribution_method
       level               = "System"
-      payload_validate    = true
       user_removable      = false
       allow_all_computers = var.allow_all_computers
       scope               = var.scope
+
+      payload_header = {
+        payload_description_header  = coalesce(var.profile_description, "")
+        payload_enabled_header      = true
+        payload_organization_header = "Company"
+        payload_type_header         = "Configuration"
+        payload_version_header      = 1
+        payload_display_name_header = var.profile_name
+        payload_scope_header        = "System"
+      }
+
+      payload_content = {
+        payload_description  = ""
+        payload_display_name = "Company WiFi"
+        payload_enabled      = true
+        payload_organization = "Company"
+        payload_type         = "com.apple.wifi.managed"
+        payload_version      = 1
+        payload_scope        = "System"
+
+        settings = {
+          SSID_STR = "CompanySSID"
+          AutoJoin = true
+        }
+      }
     }
   }
 }
@@ -41,17 +64,22 @@ module "computer_configuration_profile" {
 
   name                = each.value.name
   description         = try(each.value.description, null)
-  redeploy_on_update  = try(each.value.redeploy_on_update, "Newly Assigned")
   distribution_method = try(each.value.distribution_method, "Install Automatically")
+  redeploy_on_update  = try(each.value.redeploy_on_update, "Newly Assigned")
+  user_removable      = try(each.value.user_removable, false)
   level               = try(each.value.level, "System")
 
-  payloads_file       = each.value.payloads_file
-  payload_validate    = try(each.value.payload_validate, true)
-  user_removable      = try(each.value.user_removable, false)
-  site_id             = try(each.value.site_id, null)
-  category_id         = try(each.value.category_id, null)
+  site_id     = try(each.value.site_id, null)
+  category_id = try(each.value.category_id, null)
+
   allow_all_computers = try(each.value.allow_all_computers, false)
   scope               = each.value.scope
+
+  payload_header  = each.value.payload_header
+  payload_content = each.value.payload_content
+
+  self_service = try(each.value.self_service, null)
+  timeouts     = try(each.value.timeouts, {})
 }
 
 output "profile_ids" {

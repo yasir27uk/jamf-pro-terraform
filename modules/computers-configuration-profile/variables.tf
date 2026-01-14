@@ -8,21 +8,35 @@ variable "name" {
   }
 }
 
-variable "payloads" {
-  type        = string
-  description = "The macOS configuration profile payload (.mobileconfig contents)."
-  default     = null
+variable "payload_header" {
+  description = "Header-level payload fields for the plist generator."
+  type = object({
+    payload_description_header  = string
+    payload_enabled_header      = bool
+    payload_organization_header = string
+    payload_type_header         = string
+    payload_version_header      = number
+
+    payload_display_name_header       = optional(string)
+    payload_removal_disallowed_header = optional(bool, false)
+    payload_scope_header              = optional(string, "System")
+  })
 }
 
-variable "payloads_file" {
-  type        = string
-  description = "Path to a .mobileconfig file. If set, the module will read it using file()."
-  default     = null
+variable "payload_content" {
+  description = "Payload content block for the plist generator."
+  type = object({
+    payload_description        = optional(string, "")
+    payload_display_name       = optional(string)
+    payload_enabled            = optional(bool, true)
+    payload_organization       = string
+    payload_type               = string
+    payload_version            = number
+    payload_removal_disallowed = optional(bool, false)
+    payload_scope              = optional(string, "System")
 
-  validation {
-    condition     = (var.payloads == null) != (var.payloads_file == null)
-    error_message = "Exactly one of payloads or payloads_file must be set."
-  }
+    settings = map(any)
+  })
 }
 
 variable "redeploy_on_update" {

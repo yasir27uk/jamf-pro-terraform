@@ -64,8 +64,6 @@ variable "profiles" {
 
     description = optional(string)
 
-    payloads_file = string
-
     redeploy_on_update  = optional(string, "Newly Assigned")
     distribution_method = optional(string, "Install Automatically")
     level               = optional(string, "System")
@@ -132,12 +130,6 @@ variable "profiles" {
     ])
     error_message = "For each profile, level must be one of: 'User', 'System'."
   }
-}
-
-variable "mobileconfig_path" {
-  type        = string
-  description = "Path to a Jamf-exported .mobileconfig file (checked into repo)."
-  default     = "profiles/company.mobileconfig"
 }
 
 variable "redeploy_on_update" {

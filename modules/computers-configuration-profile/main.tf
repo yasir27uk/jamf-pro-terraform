@@ -6,20 +6,13 @@ terraform {
   }
 }
 
-locals {
-  payloads_resolved = var.payloads_file != null ? file(var.payloads_file) : var.payloads
-}
-
-resource "jamfpro_macos_configuration_profile_plist" "this" {
-  name               = var.name
-  payloads           = local.payloads_resolved
-  redeploy_on_update = var.redeploy_on_update
-
+resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
+  name                = var.name
   description         = var.description
-  level               = var.level
   distribution_method = var.distribution_method
-  payload_validate    = var.payload_validate
+  redeploy_on_update  = var.redeploy_on_update
   user_removable      = var.user_removable
+  level               = var.level
   site_id             = var.site_id
   category_id         = var.category_id
 
@@ -83,6 +76,52 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
     }
   }
 
+  payloads {
+    payload_description_header        = var.payload_header.payload_description_header
+    payload_enabled_header            = var.payload_header.payload_enabled_header
+    payload_organization_header       = var.payload_header.payload_organization_header
+    payload_type_header               = var.payload_header.payload_type_header
+    payload_version_header            = var.payload_header.payload_version_header
+    payload_display_name_header       = var.payload_header.payload_display_name_header
+    payload_removal_disallowed_header = var.payload_header.payload_removal_disallowed_header
+    payload_scope_header              = var.payload_header.payload_scope_header
+
+    payload_content {
+      payload_description        = var.payload_content.payload_description
+      payload_display_name       = var.payload_content.payload_display_name
+      payload_enabled            = var.payload_content.payload_enabled
+      payload_organization       = var.payload_content.payload_organization
+      payload_type               = var.payload_content.payload_type
+      payload_version            = var.payload_content.payload_version
+      payload_removal_disallowed = var.payload_content.payload_removal_disallowed
+      payload_scope              = var.payload_content.payload_scope
+
+      dynamic "setting" {
+        for_each = var.payload_content.settings
+        content {
+          key = setting.key
+
+          value = can(tomap(setting.value)) ? null : tostring(setting.value)
+
+          dynamic "dictionary" {
+            for_each = can(tomap(setting.value)) ? [tomap(setting.value)] : []
+            content {
+              key = dictionary.key
+
+              dynamic "dictionary" {
+                for_each = dictionary.value
+                content {
+                  key   = dictionary.key
+                  value = tostring(dictionary.value)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   dynamic "timeouts" {
     for_each = (
       var.timeouts.create != null ||
@@ -100,11 +139,6 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
 
   lifecycle {
     precondition {
-      condition     = length(trimspace(local.payloads_resolved)) > 0
-      error_message = "Configuration profile payload is empty. Provide a Jamf-exported .mobileconfig via payloads or payloads_file (this is where Options payloads like PPPC/System Extensions/Certificates/etc are defined)."
-    }
-
-    precondition {
       condition     = var.scope.all_computers == false || var.allow_all_computers == true
       error_message = "scope.all_computers=true requires allow_all_computers=true to reduce accidental broad deployments."
     }
@@ -115,11 +149,6 @@ resource "jamfpro_macos_configuration_profile_plist" "this" {
         (var.distribution_method != "Make Available in Self Service" && var.self_service == null)
       )
       error_message = "self_service must be provided only when distribution_method is 'Make Available in Self Service'."
-    }
-
-    precondition {
-      condition     = var.level != null
-      error_message = "level must be set (use 'System' for computer-level profiles)."
     }
   }
 }
