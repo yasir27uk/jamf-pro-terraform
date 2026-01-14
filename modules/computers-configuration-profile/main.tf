@@ -59,9 +59,9 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
     content {
       install_button_text             = self_service.value.install_button_text
       self_service_description        = self_service.value.self_service_description
-      force_users_to_view_description = self_service.value.force_users_to_view_description
-      feature_on_main_page            = self_service.value.feature_on_main_page
-      notification                    = self_service.value.notification
+      force_users_to_view_description = coalesce(self_service.value.force_users_to_view_description, false)
+      feature_on_main_page            = coalesce(self_service.value.feature_on_main_page, false)
+      notification                    = coalesce(self_service.value.notification, false)
       notification_subject            = self_service.value.notification_subject
       notification_message            = self_service.value.notification_message
 
@@ -69,8 +69,8 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
         for_each = self_service.value.self_service_categories
         content {
           id         = self_service_category.value.id
-          display_in = self_service_category.value.display_in
-          feature_in = self_service_category.value.feature_in
+          display_in = coalesce(self_service_category.value.display_in, false)
+          feature_in = coalesce(self_service_category.value.feature_in, false)
         }
       }
     }
