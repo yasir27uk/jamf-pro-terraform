@@ -57,6 +57,58 @@ variable "profile_description" {
   default     = null
 }
 
+variable "payload_header" {
+  description = "Header-level payload fields for the plist generator (single-profile fallback)."
+  type = object({
+    payload_description_header  = string
+    payload_enabled_header      = bool
+    payload_organization_header = string
+    payload_type_header         = string
+    payload_version_header      = number
+
+    payload_display_name_header       = optional(string)
+    payload_removal_disallowed_header = optional(bool, false)
+    payload_scope_header              = optional(string, "System")
+  })
+  default = {
+    payload_description_header  = ""
+    payload_enabled_header      = true
+    payload_organization_header = "Company"
+    payload_type_header         = "Configuration"
+    payload_version_header      = 1
+    payload_display_name_header = "Company Base Profile"
+    payload_scope_header        = "System"
+  }
+}
+
+variable "payload_content" {
+  description = "Payload content block for the plist generator (single-profile fallback)."
+  type = object({
+    payload_description  = optional(string, "")
+    payload_display_name = optional(string)
+    payload_enabled      = optional(bool, true)
+    payload_organization = string
+    payload_type         = string
+    payload_version      = number
+    payload_scope        = optional(string, "System")
+
+    settings = map(any)
+  })
+  default = {
+    payload_description  = ""
+    payload_display_name = "Company WiFi"
+    payload_enabled      = true
+    payload_organization = "Company"
+    payload_type         = "com.apple.wifi.managed"
+    payload_version      = 1
+    payload_scope        = "System"
+    settings = {
+      SSID_STR = "CompanySSID"
+      AutoJoin = true
+    }
+  }
+}
+
 variable "profiles" {
   description = "Optional map of configuration profiles to create. If provided, overrides the single profile_* variables and creates one profile per map entry."
   type = map(object({
@@ -68,8 +120,7 @@ variable "profiles" {
     distribution_method = optional(string, "Install Automatically")
     level               = optional(string, "System")
 
-    payload_validate = optional(bool, true)
-    user_removable   = optional(bool, false)
+    user_removable = optional(bool, false)
 
     site_id     = optional(number)
     category_id = optional(number)
@@ -107,6 +158,53 @@ variable "profiles" {
         ibeacon_ids                          = optional(set(number), [])
       }))
     })
+
+    payload_header = object({
+      payload_description_header  = string
+      payload_enabled_header      = bool
+      payload_organization_header = string
+      payload_type_header         = string
+      payload_version_header      = number
+
+      payload_display_name_header       = optional(string)
+      payload_removal_disallowed_header = optional(bool, false)
+      payload_scope_header              = optional(string, "System")
+    })
+
+    payload_content = object({
+      payload_description  = optional(string, "")
+      payload_display_name = optional(string)
+      payload_enabled      = optional(bool, true)
+      payload_organization = string
+      payload_type         = string
+      payload_version      = number
+      payload_scope        = optional(string, "System")
+
+      settings = map(any)
+    })
+
+    self_service = optional(object({
+      install_button_text             = optional(string)
+      self_service_description        = optional(string)
+      force_users_to_view_description = optional(bool)
+      feature_on_main_page            = optional(bool)
+      notification                    = optional(bool)
+      notification_subject            = optional(string)
+      notification_message            = optional(string)
+
+      self_service_categories = optional(list(object({
+        id         = number
+        display_in = optional(bool)
+        feature_in = optional(bool)
+      })), [])
+    }))
+
+    timeouts = optional(object({
+      create = optional(string)
+      read   = optional(string)
+      update = optional(string)
+      delete = optional(string)
+    }), {})
   }))
   default = null
 

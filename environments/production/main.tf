@@ -30,30 +30,8 @@ locals {
       allow_all_computers = var.allow_all_computers
       scope               = var.scope
 
-      payload_header = {
-        payload_description_header  = coalesce(var.profile_description, "")
-        payload_enabled_header      = true
-        payload_organization_header = "Company"
-        payload_type_header         = "Configuration"
-        payload_version_header      = 1
-        payload_display_name_header = var.profile_name
-        payload_scope_header        = "System"
-      }
-
-      payload_content = {
-        payload_description  = ""
-        payload_display_name = "Company WiFi"
-        payload_enabled      = true
-        payload_organization = "Company"
-        payload_type         = "com.apple.wifi.managed"
-        payload_version      = 1
-        payload_scope        = "System"
-
-        settings = {
-          SSID_STR = "CompanySSID"
-          AutoJoin = true
-        }
-      }
+      payload_header  = var.payload_header
+      payload_content = var.payload_content
     }
   }
 }

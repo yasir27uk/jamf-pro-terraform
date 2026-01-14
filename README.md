@@ -13,12 +13,12 @@ This project contains Terraform configurations for managing Jamf Pro resources u
 1. **Install Terraform**: Follow the [official Terraform installation guide](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 2. **Configure Authentication**:
-   - Copy `terraform.tfvars.example` to `terraform.tfvars`
-   - Fill in your Jamf Pro server details and credentials
-   - Choose between basic authentication (username/password) or OAuth2 (client ID/secret)
+   - Copy `environments/production/terraform.tfvars.example` to `environments/production/terraform.tfvars`
+   - Fill in your Jamf Pro server details and OAuth2 credentials
 
 3. **Initialize Terraform**:
    ```bash
+   cd environments/production
    terraform init
    ```
 
@@ -32,18 +32,18 @@ This project contains Terraform configurations for managing Jamf Pro resources u
 
 ### Basic Authentication
 ```hcl
-auth_method = "basic"
 jamfpro_instance_fqdn = "https://yourcompany.jamfcloud.com"
-basic_auth_username   = "your_username"
-basic_auth_password   = "your_password"
+jamfpro_auth_method = "basic"
+jamfpro_username    = "your_username"
+jamfpro_password    = "your_password"
 ```
 
 ### OAuth2 Authentication
 ```hcl
-auth_method = "oauth2"
 jamfpro_instance_fqdn = "https://yourcompany.jamfcloud.com"
-client_id   = "your_client_id"
-client_secret = "your_client_secret"
+jamfpro_auth_method   = "oauth2"
+jamfpro_client_id     = "your_client_id"
+jamfpro_client_secret = "your_client_secret"
 ```
 
 ## Important Notes
@@ -75,7 +75,7 @@ Production configurations should live under `environments/` (for example `enviro
 
 This repository includes an enterprise-focused module for **Computer (macOS) Configuration Profiles** with stronger defaults and guardrails.
 
-Jamf Pro Configuration Profile **Options** are defined inside the `.mobileconfig` payload you pass to the module. This includes:
+This repository uses the provider's **plist generator** to define configuration profile payloads in Terraform (no `.mobileconfig` files required). Jamf Pro Configuration Profile options and payload types include:
 
 - **General**
 - **Application & Custom Settings** (including uploaded payloads)
