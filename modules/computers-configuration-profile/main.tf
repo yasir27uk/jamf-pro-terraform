@@ -11,14 +11,14 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
   description         = var.description
   distribution_method = var.distribution_method
   redeploy_on_update  = var.redeploy_on_update
-  user_removable      = var.user_removable
+  user_removable      = coalesce(var.user_removable, false)
   level               = var.level
   site_id             = var.site_id
   category_id         = var.category_id
 
   scope {
-    all_computers = var.scope.all_computers
-    all_jss_users = var.scope.all_jss_users
+    all_computers = coalesce(var.scope.all_computers, false)
+    all_jss_users = coalesce(var.scope.all_jss_users, false)
 
     building_ids       = var.scope.building_ids
     computer_group_ids = var.scope.computer_group_ids
@@ -77,23 +77,24 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
   }
 
   payloads {
-    payload_description_header        = var.payload_header.payload_description_header
-    payload_enabled_header            = var.payload_header.payload_enabled_header
-    payload_organization_header       = var.payload_header.payload_organization_header
-    payload_type_header               = var.payload_header.payload_type_header
-    payload_version_header            = var.payload_header.payload_version_header
+    payload_description_header  = var.payload_header.payload_description_header
+    payload_enabled_header      = coalesce(var.payload_header.payload_enabled_header, true)
+    payload_organization_header = var.payload_header.payload_organization_header
+    payload_type_header         = var.payload_header.payload_type_header
+    payload_version_header      = var.payload_header.payload_version_header
+
     payload_display_name_header       = var.payload_header.payload_display_name_header
-    payload_removal_disallowed_header = var.payload_header.payload_removal_disallowed_header
+    payload_removal_disallowed_header = coalesce(var.payload_header.payload_removal_disallowed_header, false)
     payload_scope_header              = var.payload_header.payload_scope_header
 
     payload_content {
       payload_description        = var.payload_content.payload_description
       payload_display_name       = var.payload_content.payload_display_name
-      payload_enabled            = var.payload_content.payload_enabled
+      payload_enabled            = coalesce(var.payload_content.payload_enabled, true)
       payload_organization       = var.payload_content.payload_organization
       payload_type               = var.payload_content.payload_type
       payload_version            = var.payload_content.payload_version
-      payload_removal_disallowed = var.payload_content.payload_removal_disallowed
+      payload_removal_disallowed = coalesce(var.payload_content.payload_removal_disallowed, false)
       payload_scope              = var.payload_content.payload_scope
 
       dynamic "setting" {
