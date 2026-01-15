@@ -62,7 +62,6 @@ variable "payload_configurations" {
 }
 
 variable "scope" {
-  description = "Jamf Pro scope configuration."
   type = object({
     all_computers        = bool
     all_jss_users        = bool
@@ -94,6 +93,7 @@ variable "scope" {
     }))
   })
 }
+
 
 variable "self_service_enabled" {
   type    = bool
