@@ -98,7 +98,12 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
       payload_scope              = var.payload_content.payload_scope
 
       dynamic "setting" {
-        for_each = var.payload_content.settings
+        for_each = merge(
+          var.payload_content.settings,
+          {
+            for s in var.payload_content.settings_list : s.key => s.value
+          }
+        )
         content {
           key = setting.key
 

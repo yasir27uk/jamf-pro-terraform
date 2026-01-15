@@ -13,7 +13,7 @@ variable "jamfpro_instance_fqdn" {
   type        = string
   description = "The Jamf Pro instance FQDN (e.g., https://yourcompany.jamfcloud.com)"
   sensitive   = true
-  default     = null
+  default     = "https://yourcompany.jamfcloud.com"
 
   validation {
     condition     = var.jamfpro_instance_fqdn != null && length(trimspace(var.jamfpro_instance_fqdn)) > 0
@@ -25,7 +25,7 @@ variable "jamfpro_client_id" {
   type        = string
   description = "The Jamf Pro OAuth2 client id (required when auth_method is oauth2)."
   sensitive   = true
-  default     = null
+  default     = "your_client_id"
 
   validation {
     condition     = var.jamfpro_auth_method != "oauth2" || (var.jamfpro_client_id != null && length(trimspace(var.jamfpro_client_id)) > 0)
@@ -37,7 +37,7 @@ variable "jamfpro_client_secret" {
   type        = string
   description = "The Jamf Pro OAuth2 client secret (required when auth_method is oauth2)."
   sensitive   = true
-  default     = null
+  default     = "your_client_secret"
 
   validation {
     condition     = var.jamfpro_auth_method != "oauth2" || (var.jamfpro_client_secret != null && length(trimspace(var.jamfpro_client_secret)) > 0)
@@ -45,16 +45,28 @@ variable "jamfpro_client_secret" {
   }
 }
 
+variable "version_number" {
+  description = "The version number to include in the name and install button text."
+  type        = string
+  default     = "1.0"
+}
+
+variable "plist_version_number" {
+  description = "Payload version number used for plist payload header/content versions."
+  type        = number
+  default     = 1
+}
+
 variable "profile_name" {
   type        = string
   description = "Jamf UI name for the configuration profile."
-  default     = "Company Base Profile"
+  default     = "Company - PPPC + System Extensions"
 }
 
 variable "profile_description" {
   type        = string
   description = "Description for the configuration profile."
-  default     = null
+  default     = "Managed by Terraform"
 }
 
 variable "payload_header" {
@@ -71,12 +83,12 @@ variable "payload_header" {
     payload_scope_header              = optional(string, "System")
   })
   default = {
-    payload_description_header  = ""
+    payload_description_header  = "Base Level Accessibility settings for vision"
     payload_enabled_header      = true
-    payload_organization_header = "Company"
+    payload_organization_header = "Deployment Theory"
     payload_type_header         = "Configuration"
     payload_version_header      = 1
-    payload_display_name_header = "Company Base Profile"
+    payload_display_name_header = "Company - PPPC + System Extensions"
     payload_scope_header        = "System"
   }
 }
@@ -92,20 +104,78 @@ variable "payload_content" {
     payload_version      = number
     payload_scope        = optional(string, "System")
 
-    settings = map(any)
+    settings = optional(map(any), {})
+    settings_list = optional(list(object({
+      key   = string
+      value = string
+    })), [])
   })
   default = {
     payload_description  = ""
-    payload_display_name = "Company WiFi"
+    payload_display_name = "Accessibility"
     payload_enabled      = true
-    payload_organization = "Company"
-    payload_type         = "com.apple.wifi.managed"
+    payload_organization = "Deployment Theory"
+    payload_type         = "com.apple.universalaccess"
     payload_version      = 1
     payload_scope        = "System"
-    settings = {
-      SSID_STR = "CompanySSID"
-      AutoJoin = true
-    }
+    settings             = {}
+    settings_list = [
+      { key = "closeViewFarPoint", value = "2" },
+      { key = "closeViewHotkeysEnabled", value = "true" },
+      { key = "closeViewNearPoint", value = "10" },
+      { key = "closeViewScrollWheelToggle", value = "true" },
+      { key = "closeViewShowPreview", value = "true" },
+      { key = "closeViewSmoothImages", value = "true" },
+      { key = "contrast", value = "0" },
+      { key = "flashScreen", value = "false" },
+      { key = "grayscale", value = "false" },
+      { key = "mouseDriver", value = "false" },
+      { key = "mouseDriverCursorSize", value = "3" },
+      { key = "mouseDriverIgnoreTrackpad", value = "false" },
+      { key = "mouseDriverInitialDelay", value = "1.0" },
+      { key = "mouseDriverMaxSpeed", value = "3" },
+      { key = "slowKey", value = "false" },
+      { key = "slowKeyBeepOn", value = "false" },
+      { key = "slowKeyDelay", value = "0" },
+      { key = "stereoAsMono", value = "false" },
+      { key = "stickyKey", value = "false" },
+      { key = "stickyKeyBeepOnModifier", value = "false" },
+      { key = "stickyKeyShowWindow", value = "false" },
+      { key = "voiceOverOnOffKey", value = "true" },
+      { key = "whiteOnBlack", value = "false" },
+    ]
+  }
+}
+
+variable "self_service" {
+  description = "Self Service configuration. Only valid when distribution_method is 'Make Available in Self Service'."
+  type = object({
+    install_button_text             = optional(string)
+    self_service_description        = optional(string)
+    force_users_to_view_description = optional(bool)
+    feature_on_main_page            = optional(bool)
+    notification                    = optional(bool)
+    notification_subject            = optional(string)
+    notification_message            = optional(string)
+
+    self_service_categories = optional(list(object({
+      id         = number
+      display_in = optional(bool)
+      feature_in = optional(bool)
+    })), [])
+  })
+  default = {
+    install_button_text             = null
+    self_service_description        = "This is the self service description"
+    force_users_to_view_description = true
+    feature_on_main_page            = true
+    notification                    = true
+    notification_subject            = "New Profile Available"
+    notification_message            = "A new profile is available for installation."
+    self_service_categories = [
+      { id = 10, display_in = true, feature_in = true },
+      { id = 5, display_in = false, feature_in = true },
+    ]
   }
 }
 
@@ -284,6 +354,33 @@ variable "scope" {
   })
 
   default = {
-    all_computers = false
+    all_computers      = false
+    all_jss_users      = false
+    computer_ids       = [16, 20, 21]
+    computer_group_ids = [78, 1]
+    building_ids       = [1348, 1349]
+    department_ids     = [37287, 37288]
+    jss_user_ids       = [2, 1]
+    jss_user_group_ids = [4, 505]
+
+    limitations = {
+      network_segment_ids                  = [4, 5]
+      ibeacon_ids                          = [3, 4]
+      directory_service_or_local_usernames = ["Jane Smith", "John Doe"]
+      directory_service_usergroup_ids      = [3, 4]
+    }
+
+    exclusions = {
+      computer_ids                         = [16, 20, 21]
+      computer_group_ids                   = [78, 1]
+      building_ids                         = [1348, 1349]
+      department_ids                       = [37287, 37288]
+      network_segment_ids                  = [4, 5]
+      jss_user_ids                         = [2, 1]
+      jss_user_group_ids                   = [4, 505]
+      directory_service_or_local_usernames = ["Jane Smith", "John Doe"]
+      directory_service_usergroup_ids      = [3, 4]
+      ibeacon_ids                          = [3, 4]
+    }
   }
 }

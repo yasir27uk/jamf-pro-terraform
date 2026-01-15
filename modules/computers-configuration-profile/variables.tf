@@ -35,7 +35,11 @@ variable "payload_content" {
     payload_removal_disallowed = optional(bool, false)
     payload_scope              = optional(string, "System")
 
-    settings = map(any)
+    settings = optional(map(any), {})
+    settings_list = optional(list(object({
+      key   = string
+      value = any
+    })), [])
   })
 }
 

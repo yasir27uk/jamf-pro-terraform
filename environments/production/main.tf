@@ -18,8 +18,9 @@ provider "jamfpro" {
   jamfpro_load_balancer_lock = true
 }
 
-locals {
-  profiles = var.profiles != null ? {
+module "computer_configuration_profile" {
+  source = "../../modules/computers-configuration-profile"
+  for_each = var.profiles != null ? {
     for k, v in var.profiles : k => merge(
       {
         payload_header  = var.payload_header
@@ -29,7 +30,7 @@ locals {
     )
     } : {
     default = {
-      name                = var.profile_name
+      name                = "${var.profile_name}-${var.version_number}"
       description         = var.profile_description
       redeploy_on_update  = var.redeploy_on_update
       distribution_method = var.distribution_method
@@ -38,15 +39,22 @@ locals {
       allow_all_computers = var.allow_all_computers
       scope               = var.scope
 
-      payload_header  = var.payload_header
-      payload_content = var.payload_content
+      payload_header = merge(
+        var.payload_header,
+        {
+          payload_version_header      = var.plist_version_number
+          payload_display_name_header = "${var.profile_name}-${var.version_number}"
+        }
+      )
+
+      payload_content = merge(
+        var.payload_content,
+        {
+          payload_version = var.plist_version_number
+        }
+      )
     }
   }
-}
-
-module "computer_configuration_profile" {
-  source   = "../../modules/computers-configuration-profile"
-  for_each = local.profiles
 
   name                = each.value.name
   description         = try(each.value.description, null)
