@@ -17,30 +17,24 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
     jss_user_ids       = sort(var.scope.jss_user_ids)
     jss_user_group_ids = var.scope.jss_user_group_ids
 
-    dynamic "limitations" {
-      for_each = var.scope.limitations == null ? [] : [var.scope.limitations]
-      content {
-        network_segment_ids                  = limitations.value.network_segment_ids
-        ibeacon_ids                          = limitations.value.ibeacon_ids
-        directory_service_or_local_usernames = limitations.value.directory_service_or_local_usernames
-        directory_service_usergroup_ids      = limitations.value.directory_service_usergroup_ids
-      }
+    limitations {
+      network_segment_ids                  = try(var.scope.limitations.network_segment_ids, [])
+      ibeacon_ids                          = try(var.scope.limitations.ibeacon_ids, [])
+      directory_service_or_local_usernames = try(var.scope.limitations.directory_service_or_local_usernames, [])
+      directory_service_usergroup_ids      = try(var.scope.limitations.directory_service_usergroup_ids, [])
     }
 
-    dynamic "exclusions" {
-      for_each = var.scope.exclusions == null ? [] : [var.scope.exclusions]
-      content {
-        computer_ids                         = exclusions.value.computer_ids
-        computer_group_ids                   = sort(exclusions.value.computer_group_ids)
-        building_ids                         = exclusions.value.building_ids
-        department_ids                       = exclusions.value.department_ids
-        network_segment_ids                  = exclusions.value.network_segment_ids
-        jss_user_ids                         = sort(exclusions.value.jss_user_ids)
-        jss_user_group_ids                   = exclusions.value.jss_user_group_ids
-        directory_service_or_local_usernames = exclusions.value.directory_service_or_local_usernames
-        directory_service_usergroup_ids      = exclusions.value.directory_service_usergroup_ids
-        ibeacon_ids                          = exclusions.value.ibeacon_ids
-      }
+    exclusions {
+      computer_ids                         = try(var.scope.exclusions.computer_ids, [])
+      computer_group_ids                   = sort(try(var.scope.exclusions.computer_group_ids, []))
+      building_ids                         = try(var.scope.exclusions.building_ids, [])
+      department_ids                       = try(var.scope.exclusions.department_ids, [])
+      network_segment_ids                  = try(var.scope.exclusions.network_segment_ids, [])
+      jss_user_ids                         = sort(try(var.scope.exclusions.jss_user_ids, []))
+      jss_user_group_ids                   = try(var.scope.exclusions.jss_user_group_ids, [])
+      directory_service_or_local_usernames = try(var.scope.exclusions.directory_service_or_local_usernames, [])
+      directory_service_usergroup_ids      = try(var.scope.exclusions.directory_service_usergroup_ids, [])
+      ibeacon_ids                          = try(var.scope.exclusions.ibeacon_ids, [])
     }
   }
 
