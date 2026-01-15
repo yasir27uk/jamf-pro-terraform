@@ -8,6 +8,37 @@ variable "name" {
   }
 }
 
+variable "payloads" {
+  description = "Provider-doc style payloads input with payload_root and payload_content.configuration. If set, payload_header and payload_content may be null."
+  type = object({
+    payload_root = object({
+      payload_description_root        = optional(string, "")
+      payload_enabled_root            = optional(bool, true)
+      payload_organization_root       = string
+      payload_removal_disallowed_root = optional(bool, false)
+      payload_scope_root              = optional(string, "System")
+      payload_type_root               = string
+      payload_version_root            = number
+    })
+
+    payload_content = object({
+      configuration = optional(list(object({
+        key   = string
+        value = any
+      })), [])
+
+      payload_description  = optional(string, "")
+      payload_display_name = optional(string)
+      payload_enabled      = optional(bool, true)
+      payload_organization = string
+      payload_type         = string
+      payload_version      = number
+      payload_scope        = optional(string, "System")
+    })
+  })
+  default = null
+}
+
 variable "payload_header" {
   description = "Header-level payload fields for the plist generator."
   type = object({
@@ -21,6 +52,16 @@ variable "payload_header" {
     payload_removal_disallowed_header = optional(bool, false)
     payload_scope_header              = optional(string, "System")
   })
+
+  default = null
+
+  validation {
+    condition = (
+      var.payloads != null ||
+      var.payload_header != null
+    )
+    error_message = "Either payloads must be set, or payload_header must be set."
+  }
 }
 
 variable "payload_content" {
@@ -41,6 +82,16 @@ variable "payload_content" {
       value = any
     })), [])
   })
+
+  default = null
+
+  validation {
+    condition = (
+      var.payloads != null ||
+      var.payload_content != null
+    )
+    error_message = "Either payloads must be set, or payload_content must be set."
+  }
 }
 
 variable "redeploy_on_update" {

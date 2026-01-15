@@ -6,6 +6,41 @@ terraform {
   }
 }
 
+locals {
+  effective_payload_header = var.payloads != null ? {
+    payload_description_header        = try(var.payloads.payload_root.payload_description_root, "")
+    payload_enabled_header            = try(var.payloads.payload_root.payload_enabled_root, true)
+    payload_organization_header       = var.payloads.payload_root.payload_organization_root
+    payload_type_header               = var.payloads.payload_root.payload_type_root
+    payload_version_header            = var.payloads.payload_root.payload_version_root
+    payload_display_name_header       = null
+    payload_removal_disallowed_header = try(var.payloads.payload_root.payload_removal_disallowed_root, false)
+    payload_scope_header              = try(var.payloads.payload_root.payload_scope_root, "System")
+  } : var.payload_header
+
+  effective_payload_content = var.payloads != null ? {
+    payload_description        = try(var.payloads.payload_content.payload_description, "")
+    payload_display_name       = try(var.payloads.payload_content.payload_display_name, null)
+    payload_enabled            = try(var.payloads.payload_content.payload_enabled, true)
+    payload_organization       = var.payloads.payload_content.payload_organization
+    payload_type               = var.payloads.payload_content.payload_type
+    payload_version            = var.payloads.payload_content.payload_version
+    payload_removal_disallowed = false
+    payload_scope              = try(var.payloads.payload_content.payload_scope, "System")
+    settings                   = {}
+    settings_list              = []
+  } : var.payload_content
+
+  effective_setting_map = var.payloads != null ? {
+    for c in try(var.payloads.payload_content.configuration, []) : c.key => c.value
+  } : merge(
+    try(var.payload_content.settings, {}),
+    {
+      for s in try(var.payload_content.settings_list, []) : s.key => s.value
+    }
+  )
+}
+
 resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
   name                = var.name
   description         = var.description
@@ -77,33 +112,28 @@ resource "jamfpro_macos_configuration_profile_plist_generator" "this" {
   }
 
   payloads {
-    payload_description_header  = var.payload_header.payload_description_header
-    payload_enabled_header      = coalesce(var.payload_header.payload_enabled_header, true)
-    payload_organization_header = var.payload_header.payload_organization_header
-    payload_type_header         = var.payload_header.payload_type_header
-    payload_version_header      = var.payload_header.payload_version_header
+    payload_description_header  = local.effective_payload_header.payload_description_header
+    payload_enabled_header      = coalesce(local.effective_payload_header.payload_enabled_header, true)
+    payload_organization_header = local.effective_payload_header.payload_organization_header
+    payload_type_header         = local.effective_payload_header.payload_type_header
+    payload_version_header      = local.effective_payload_header.payload_version_header
 
-    payload_display_name_header       = var.payload_header.payload_display_name_header
-    payload_removal_disallowed_header = coalesce(var.payload_header.payload_removal_disallowed_header, false)
-    payload_scope_header              = var.payload_header.payload_scope_header
+    payload_display_name_header       = try(local.effective_payload_header.payload_display_name_header, null)
+    payload_removal_disallowed_header = coalesce(try(local.effective_payload_header.payload_removal_disallowed_header, null), false)
+    payload_scope_header              = try(local.effective_payload_header.payload_scope_header, "System")
 
     payload_content {
-      payload_description        = var.payload_content.payload_description
-      payload_display_name       = var.payload_content.payload_display_name
-      payload_enabled            = coalesce(var.payload_content.payload_enabled, true)
-      payload_organization       = var.payload_content.payload_organization
-      payload_type               = var.payload_content.payload_type
-      payload_version            = var.payload_content.payload_version
-      payload_removal_disallowed = coalesce(var.payload_content.payload_removal_disallowed, false)
-      payload_scope              = var.payload_content.payload_scope
+      payload_description        = local.effective_payload_content.payload_description
+      payload_display_name       = local.effective_payload_content.payload_display_name
+      payload_enabled            = coalesce(local.effective_payload_content.payload_enabled, true)
+      payload_organization       = local.effective_payload_content.payload_organization
+      payload_type               = local.effective_payload_content.payload_type
+      payload_version            = local.effective_payload_content.payload_version
+      payload_removal_disallowed = coalesce(try(local.effective_payload_content.payload_removal_disallowed, null), false)
+      payload_scope              = try(local.effective_payload_content.payload_scope, "System")
 
       dynamic "setting" {
-        for_each = merge(
-          var.payload_content.settings,
-          {
-            for s in var.payload_content.settings_list : s.key => s.value
-          }
-        )
+        for_each = local.effective_setting_map
         content {
           key = setting.key
 

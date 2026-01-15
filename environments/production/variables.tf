@@ -69,6 +69,83 @@ variable "profile_description" {
   default     = "Managed by Terraform"
 }
 
+variable "payloads" {
+  description = "Provider-doc style payloads input with payload_root and payload_content.configuration (single-profile fallback)."
+  type = object({
+    payload_root = object({
+      payload_description_root        = optional(string, "")
+      payload_enabled_root            = optional(bool, true)
+      payload_organization_root       = string
+      payload_removal_disallowed_root = optional(bool, false)
+      payload_scope_root              = optional(string, "System")
+      payload_type_root               = string
+      payload_version_root            = number
+    })
+
+    payload_content = object({
+      configuration = optional(list(object({
+        key   = string
+        value = string
+      })), [])
+
+      payload_description  = optional(string, "")
+      payload_display_name = optional(string)
+      payload_enabled      = optional(bool, true)
+      payload_organization = string
+      payload_type         = string
+      payload_version      = number
+      payload_scope        = optional(string, "System")
+    })
+  })
+  default = {
+    payload_root = {
+      payload_description_root        = "Base Level Accessibility settings for vision"
+      payload_enabled_root            = true
+      payload_organization_root       = "Deployment Theory"
+      payload_removal_disallowed_root = false
+      payload_scope_root              = "System"
+      payload_type_root               = "Configuration"
+      payload_version_root            = 1
+    }
+
+    payload_content = {
+      payload_description  = ""
+      payload_display_name = "Accessibility"
+      payload_enabled      = true
+      payload_organization = "Deployment Theory"
+      payload_type         = "com.apple.universalaccess"
+      payload_version      = 1
+      payload_scope        = "System"
+
+      configuration = [
+        { key = "closeViewFarPoint", value = "2" },
+        { key = "closeViewHotkeysEnabled", value = "true" },
+        { key = "closeViewNearPoint", value = "10" },
+        { key = "closeViewScrollWheelToggle", value = "true" },
+        { key = "closeViewShowPreview", value = "true" },
+        { key = "closeViewSmoothImages", value = "true" },
+        { key = "contrast", value = "0" },
+        { key = "flashScreen", value = "false" },
+        { key = "grayscale", value = "false" },
+        { key = "mouseDriver", value = "false" },
+        { key = "mouseDriverCursorSize", value = "3" },
+        { key = "mouseDriverIgnoreTrackpad", value = "false" },
+        { key = "mouseDriverInitialDelay", value = "1.0" },
+        { key = "mouseDriverMaxSpeed", value = "3" },
+        { key = "slowKey", value = "false" },
+        { key = "slowKeyBeepOn", value = "false" },
+        { key = "slowKeyDelay", value = "0" },
+        { key = "stereoAsMono", value = "false" },
+        { key = "stickyKey", value = "false" },
+        { key = "stickyKeyBeepOnModifier", value = "false" },
+        { key = "stickyKeyShowWindow", value = "false" },
+        { key = "voiceOverOnOffKey", value = "true" },
+        { key = "whiteOnBlack", value = "false" },
+      ]
+    }
+  }
+}
+
 variable "payload_header" {
   description = "Header-level payload fields for the plist generator (single-profile fallback)."
   type = object({
@@ -229,28 +306,31 @@ variable "profiles" {
       }))
     })
 
-    payload_header = object({
-      payload_description_header  = string
-      payload_enabled_header      = bool
-      payload_organization_header = string
-      payload_type_header         = string
-      payload_version_header      = number
+    payloads = object({
+      payload_root = object({
+        payload_description_root        = optional(string, "")
+        payload_enabled_root            = optional(bool, true)
+        payload_organization_root       = string
+        payload_removal_disallowed_root = optional(bool, false)
+        payload_scope_root              = optional(string, "System")
+        payload_type_root               = string
+        payload_version_root            = number
+      })
 
-      payload_display_name_header       = optional(string)
-      payload_removal_disallowed_header = optional(bool, false)
-      payload_scope_header              = optional(string, "System")
-    })
+      payload_content = object({
+        configuration = optional(list(object({
+          key   = string
+          value = string
+        })), [])
 
-    payload_content = object({
-      payload_description  = optional(string, "")
-      payload_display_name = optional(string)
-      payload_enabled      = optional(bool, true)
-      payload_organization = string
-      payload_type         = string
-      payload_version      = number
-      payload_scope        = optional(string, "System")
-
-      settings = map(any)
+        payload_description  = optional(string, "")
+        payload_display_name = optional(string)
+        payload_enabled      = optional(bool, true)
+        payload_organization = string
+        payload_type         = string
+        payload_version      = number
+        payload_scope        = optional(string, "System")
+      })
     })
 
     self_service = optional(object({

@@ -23,8 +23,8 @@ module "computer_configuration_profile" {
   for_each = var.profiles != null ? {
     for k, v in var.profiles : k => merge(
       {
-        payload_header  = var.payload_header
-        payload_content = var.payload_content
+        payloads     = var.payloads
+        self_service = var.self_service
       },
       v
     )
@@ -39,20 +39,28 @@ module "computer_configuration_profile" {
       allow_all_computers = var.allow_all_computers
       scope               = var.scope
 
-      payload_header = merge(
-        var.payload_header,
+      self_service = merge(
+        var.self_service,
         {
-          payload_version_header      = var.plist_version_number
-          payload_display_name_header = "${var.profile_name}-${var.version_number}"
+          install_button_text = "Install - ${var.version_number}"
         }
       )
 
-      payload_content = merge(
-        var.payload_content,
-        {
-          payload_version = var.plist_version_number
-        }
-      )
+      payloads = {
+        payload_root = merge(
+          var.payloads.payload_root,
+          {
+            payload_version_root = var.plist_version_number
+          }
+        )
+
+        payload_content = merge(
+          var.payloads.payload_content,
+          {
+            payload_version = var.plist_version_number
+          }
+        )
+      }
     }
   }
 
@@ -69,8 +77,7 @@ module "computer_configuration_profile" {
   allow_all_computers = try(each.value.allow_all_computers, false)
   scope               = each.value.scope
 
-  payload_header  = each.value.payload_header
-  payload_content = each.value.payload_content
+  payloads = each.value.payloads
 
   self_service = try(each.value.self_service, null)
   timeouts     = try(each.value.timeouts, {})
