@@ -226,8 +226,8 @@ variable "self_service" {
 
     self_service_categories = optional(list(object({
       id         = number
-      display_in = optional(bool)
-      feature_in = optional(bool)
+      display_in = optional(bool, false)
+      feature_in = optional(bool, false)
     })), [])
   })
   default = null

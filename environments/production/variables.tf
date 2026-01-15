@@ -45,6 +45,56 @@ variable "jamfpro_client_secret" {
   }
 }
 
+variable "jamfpro_basic_auth_username" {
+  description = "The Jamf Pro username used for authentication when auth_method is 'basic'."
+  default     = ""
+}
+
+variable "jamfpro_basic_auth_password" {
+  description = "The Jamf Pro password used for authentication when auth_method is 'basic'."
+  sensitive   = true
+  default     = ""
+}
+
+variable "enable_client_sdk_logs" {
+  description = "Debug option to propagate logs from the SDK and HttpClient"
+  default     = false
+}
+
+variable "client_sdk_log_export_path" {
+  description = "Specify the path to export http client logs to."
+  default     = ""
+}
+
+variable "jamfpro_hide_sensitive_data" {
+  description = "Define whether sensitive fields should be hidden in logs. Default to hiding sensitive data in logs"
+  default     = true
+}
+
+variable "jamfpro_custom_cookies" {
+  description = "Persistent custom cookies used by HTTP Client in all requests."
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
+}
+
+variable "jamfpro_jamf_load_balancer_lock" {
+  description = "Programatically determines all available web app members in the load balancer and locks all instances of httpclient to the app for faster executions."
+  default     = true
+}
+
+variable "jamfpro_token_refresh_buffer_period_seconds" {
+  description = "The buffer period in seconds for token refresh."
+  default     = 300
+}
+
+variable "jamfpro_mandatory_request_delay_milliseconds" {
+  description = "A mandatory delay after each request before returning to reduce high volume of requests in a short time."
+  default     = 1000
+}
+
 variable "version_number" {
   description = "The version number to include in the name and install button text."
   type        = string
@@ -237,8 +287,8 @@ variable "self_service" {
 
     self_service_categories = optional(list(object({
       id         = number
-      display_in = optional(bool)
-      feature_in = optional(bool)
+      display_in = optional(bool, false)
+      feature_in = optional(bool, false)
     })), [])
   })
   default = {
@@ -344,8 +394,8 @@ variable "profiles" {
 
       self_service_categories = optional(list(object({
         id         = number
-        display_in = optional(bool)
-        feature_in = optional(bool)
+        display_in = optional(bool, false)
+        feature_in = optional(bool, false)
       })), [])
     }))
 

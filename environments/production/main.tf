@@ -2,7 +2,7 @@ terraform {
   required_providers {
     jamfpro = {
       source  = "deploymenttheory/jamfpro"
-      version = ">= 0.30.0"
+      version = "= 0.28.0"
     }
   }
   required_version = ">= 1.13.0"
@@ -15,7 +15,15 @@ provider "jamfpro" {
   client_id             = var.jamfpro_client_id
   client_secret         = var.jamfpro_client_secret
 
-  jamfpro_load_balancer_lock = true
+  enable_client_sdk_logs               = var.enable_client_sdk_logs
+  client_sdk_log_export_path           = var.client_sdk_log_export_path
+  hide_sensitive_data                  = var.jamfpro_hide_sensitive_data
+  jamfpro_load_balancer_lock           = var.jamfpro_jamf_load_balancer_lock
+  token_refresh_buffer_period_seconds  = 0
+  mandatory_request_delay_milliseconds = var.jamfpro_mandatory_request_delay_milliseconds
+  basic_auth_username                  = var.jamfpro_basic_auth_username
+  basic_auth_password                  = var.jamfpro_basic_auth_password
+
 }
 
 module "computer_configuration_profile" {
@@ -23,8 +31,7 @@ module "computer_configuration_profile" {
   for_each = var.profiles != null ? {
     for k, v in var.profiles : k => merge(
       {
-        payloads     = var.payloads
-        self_service = var.self_service
+        payloads = var.payloads
       },
       v
     )
@@ -38,13 +45,6 @@ module "computer_configuration_profile" {
       user_removable      = false
       allow_all_computers = var.allow_all_computers
       scope               = var.scope
-
-      self_service = merge(
-        var.self_service,
-        {
-          install_button_text = "Install - ${var.version_number}"
-        }
-      )
 
       payloads = {
         payload_root = merge(
@@ -79,8 +79,14 @@ module "computer_configuration_profile" {
 
   payloads = each.value.payloads
 
-  self_service = try(each.value.self_service, null)
-  timeouts     = try(each.value.timeouts, {})
+  self_service = try(each.value.distribution_method, "Install Automatically") == "Make Available in Self Service" ? merge(
+    var.self_service,
+    try(each.value.self_service, {}),
+    {
+      install_button_text = "Install - ${var.version_number}"
+    }
+  ) : null
+  timeouts = try(each.value.timeouts, {})
 }
 
 output "profile_ids" {

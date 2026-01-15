@@ -9,19 +9,19 @@ terraform {
 locals {
   effective_payload_header = var.payloads != null ? {
     payload_description_header        = try(var.payloads.payload_root.payload_description_root, "")
-    payload_enabled_header            = try(var.payloads.payload_root.payload_enabled_root, true)
+    payload_enabled_header            = coalesce(try(var.payloads.payload_root.payload_enabled_root, null), true)
     payload_organization_header       = var.payloads.payload_root.payload_organization_root
     payload_type_header               = var.payloads.payload_root.payload_type_root
     payload_version_header            = var.payloads.payload_root.payload_version_root
     payload_display_name_header       = null
-    payload_removal_disallowed_header = try(var.payloads.payload_root.payload_removal_disallowed_root, false)
+    payload_removal_disallowed_header = coalesce(try(var.payloads.payload_root.payload_removal_disallowed_root, null), false)
     payload_scope_header              = try(var.payloads.payload_root.payload_scope_root, "System")
   } : var.payload_header
 
   effective_payload_content = var.payloads != null ? {
     payload_description        = try(var.payloads.payload_content.payload_description, "")
     payload_display_name       = try(var.payloads.payload_content.payload_display_name, null)
-    payload_enabled            = try(var.payloads.payload_content.payload_enabled, true)
+    payload_enabled            = coalesce(try(var.payloads.payload_content.payload_enabled, null), true)
     payload_organization       = var.payloads.payload_content.payload_organization
     payload_type               = var.payloads.payload_content.payload_type
     payload_version            = var.payloads.payload_content.payload_version
@@ -33,7 +33,7 @@ locals {
 
   effective_setting_map = var.payloads != null ? {
     for c in try(var.payloads.payload_content.configuration, []) : c.key => c.value
-  } : merge(
+    } : merge(
     try(var.payload_content.settings, {}),
     {
       for s in try(var.payload_content.settings_list, []) : s.key => s.value
